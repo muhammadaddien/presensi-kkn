@@ -174,15 +174,7 @@ function renderAktivitas() {
       });
       list.forEach(function (a) {
         var badge,
-          act = "",
-          timeLabel = "";
-        if (a.jamMulai && a.jamSelesai)
-          timeLabel =
-            '<span class="text-[11px] text-slate-400"><i class="fas fa-clock mr-1"></i>' +
-            a.jamMulai +
-            " — " +
-            a.jamSelesai +
-            " WIB</span>";
+          act = "";
         if (a.status === "Belum Mulai") {
           badge =
             '<span class="text-[10px] px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 font-bold">Belum Mulai</span>';
@@ -203,24 +195,22 @@ function renderAktivitas() {
           badge =
             '<span class="text-[10px] px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 font-bold">Selesai</span>';
           act =
-            "<button onclick=\"goNotulensi('" +
+            "<button onclick=\"openEdit('" +
             a.id +
-            '\')" class="text-[11px] font-bold text-slate-600 hover:underline">Notulensi</button>';
+            '\')" class="text-[11px] font-bold text-slate-600 hover:underline">Edit</button> <button onclick="goNotulensi(\'' +
+            a.id +
+            '\')" class="text-[11px] font-bold text-slate-600 hover:underline">Notulensi</button> <button onclick="hapusAkt(\'' +
+            a.id +
+            '\')" class="text-[11px] font-bold text-rose-500 hover:underline">Hapus</button>';
         }
         h +=
           '<div class="bg-white rounded-2xl p-4 mb-3 border border-slate-100 shadow-sm fade-up"><div class="flex justify-between items-start mb-2"><h3 class="font-bold text-sm text-slate-800 flex-1 mr-2">' +
           esc(a.nama) +
           "</h3>" +
           badge +
-          '</div><div class="text-[11px] text-slate-400 space-x-3 mb-1"><span><i class="fas fa-calendar mr-1"></i>' +
-          a.tanggal +
-          '</span><span><i class="fas fa-location-dot mr-1"></i>' +
-          esc(a.lokasi) +
-          "</span></div>" +
-          (timeLabel
-            ? '<div class="mb-3">' + timeLabel + "</div>"
-            : '<div class="mb-3"></div>') +
-          '<div class="flex justify-between items-center"><span class="text-[10px] text-slate-400"><i class="fas fa-users mr-1"></i>' +
+          '</div><p class="text-[11px] text-slate-400 mb-3"><i class="fas fa-user-pen mr-1"></i>' +
+          esc(a.dibuatOleh) +
+          '</p><div class="flex justify-between items-center"><span class="text-[10px] text-slate-400"><i class="fas fa-users mr-1"></i>' +
           a.peserta +
           ' peserta</span><div class="flex gap-3">' +
           act +
@@ -259,6 +249,51 @@ function submitBuat() {
       if (r.error) return toast(r.error, "error");
       closeModal();
       toast("Aktivitas berhasil dibuat", "success");
+      renderAktivitas();
+    })
+    .catch(function (e) {
+      toast(e.message, "error");
+    });
+}
+
+function openEdit(id) {
+  var a = acts.find(function (x) {
+    return x.id === id;
+  });
+  if (!a) return;
+  $("modal-card").innerHTML =
+    '<h3 class="font-bold text-base text-slate-800 mb-4"><i class="fas fa-pen-to-square text-blue-600 mr-1.5"></i>Edit Aktivitas</h3><div class="space-y-3"><div><label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Nama Aktivitas</label><input id="e-nama" value="' +
+    esc(a.nama) +
+    '" class="w-full mt-1 px-3 py-2.5 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"></div><div><label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Lokasi</label><input id="e-lok" value="' +
+    esc(a.lokasi) +
+    '" class="w-full mt-1 px-3 py-2.5 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"></div><div class="grid grid-cols-2 gap-2"><div><label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Jam Mulai</label><input id="e-jm" type="time" value="' +
+    (a.jamMulai || "") +
+    '" class="w-full mt-1 px-3 py-2.5 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"></div><div><label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Jam Selesai</label><input id="e-js" type="time" value="' +
+    (a.jamSelesai || "") +
+    '" class="w-full mt-1 px-3 py-2.5 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"></div></div></div><div class="flex gap-2 mt-5"><button onclick="closeModal()" class="flex-1 py-2.5 rounded-xl border border-slate-200 text-slate-600 font-bold text-sm hover:bg-slate-50 transition">Batal</button><button onclick="submitEdit(\'' +
+    id +
+    '\')" class="flex-1 py-2.5 rounded-xl bg-blue-700 text-white font-bold text-sm hover:bg-blue-800 transition active:scale-[.98]">Simpan</button></div>';
+  $("modal-bg").classList.remove("hidden");
+}
+
+function submitEdit(id) {
+  var n = $("e-nama").value.trim(),
+    l = $("e-lok").value.trim(),
+    jm = $("e-jm").value,
+    js = $("e-js").value;
+  if (!n || !l || !jm || !js) return toast("Lengkapi semua field", "error");
+  if (jm >= js) return toast("Jam selesai harus setelah jam mulai", "error");
+  api("editAktivitas", {
+    id: id,
+    nama: n,
+    lokasi: l,
+    jamMulai: jm,
+    jamSelesai: js,
+  })
+    .then(function (r) {
+      if (r.error) return toast(r.error, "error");
+      closeModal();
+      toast("Aktivitas berhasil diubah", "success");
       renderAktivitas();
     })
     .catch(function (e) {
@@ -313,16 +348,9 @@ function renderPresensi() {
       '<div class="text-center text-slate-400 text-sm py-6"><i class="fas fa-pause-circle text-2xl mb-2 block"></i>Tidak ada aktivitas yang sedang berlangsung</div>';
   } else {
     h +=
-      '<label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Pilih Aktivitas</label><select id="p-akt" onchange="loadPeserta(this.value)" class="w-full mt-1 mb-2 px-3 py-2.5 border border-slate-200 rounded-lg text-sm appearance-none bg-slate-50 focus:ring-2 focus:ring-blue-500 focus:outline-none"><option value=""> Pilih </option>';
+      '<label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Pilih Aktivitas</label><select id="p-akt" class="w-full mt-1 mb-2 px-3 py-2.5 border border-slate-200 rounded-lg text-sm appearance-none bg-slate-50 focus:ring-2 focus:ring-blue-500 focus:outline-none"><option value="">-- Pilih --</option>';
     bl.forEach(function (a) {
-      h +=
-        '<option value="' +
-        a.id +
-        '">' +
-        esc(a.nama) +
-        " (" +
-        a.tanggal +
-        ")</option>";
+      h += '<option value="' + a.id + '">' + esc(a.nama) + "</option>";
     });
     h +=
       '</select><div id="p-time" class="mb-4"></div><div id="p-form"></div><div id="p-peserta" class="mt-4"></div>';
@@ -330,21 +358,22 @@ function renderPresensi() {
   h += "</div>";
   $("t-presensi").innerHTML = h;
   showPForm();
-  $("p-akt").onchange = function () {
-    var a = acts.find(function (x) {
-      return x.id === $("p-akt").value;
-    });
-    var el = $("p-time");
-    if (a && a.jamMulai && a.jamSelesai)
-      el.innerHTML =
-        '<div class="bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-[11px] text-slate-500 text-center"><i class="fas fa-clock mr-1"></i>Presensi dibuka: <strong class="text-slate-700">' +
-        a.jamMulai +
-        '</strong> sampai <strong class="text-slate-700">' +
-        a.jamSelesai +
-        "</strong></div>";
-    else el.innerHTML = "";
-    loadPeserta(a ? a.id : "");
-  };
+  if ($("p-akt"))
+    $("p-akt").onchange = function () {
+      var a = acts.find(function (x) {
+        return x.id === $("p-akt").value;
+      });
+      var el = $("p-time");
+      if (a && a.jamMulai && a.jamSelesai)
+        el.innerHTML =
+          '<div class="bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-[11px] text-slate-500 text-center"><i class="fas fa-clock mr-1"></i>Presensi dibuka: <strong class="text-slate-700">' +
+          a.jamMulai +
+          '</strong> sampai <strong class="text-slate-700">' +
+          a.jamSelesai +
+          "</strong></div>";
+      else el.innerHTML = "";
+      loadPeserta(a ? a.id : "");
+    };
 }
 
 function showPForm() {
@@ -465,19 +494,11 @@ function renderNotulensi() {
       '<div class="text-center text-slate-400 text-sm py-6"><i class="fas fa-lock text-2xl mb-2 block"></i>Belum ada aktivitas yang selesai</div>';
   } else {
     h +=
-      '<label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Pilih Aktivitas</label><select id="n-akt" onchange="loadNotul()" class="w-full mt-1 mb-4 px-3 py-2.5 border border-slate-200 rounded-lg text-sm appearance-none bg-slate-50 focus:ring-2 focus:ring-blue-500 focus:outline-none"><option value=""> Pilih </option>';
+      '<label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Pilih Aktivitas</label><select id="n-akt" onchange="loadNotul()" class="w-full mt-1 mb-4 px-3 py-2.5 border border-slate-200 rounded-lg text-sm appearance-none bg-slate-50 focus:ring-2 focus:ring-blue-500 focus:outline-none"><option value="">-- Pilih --</option>';
     sc.forEach(function (a) {
       var sel = a.id === notPreselect ? " selected" : "";
       h +=
-        '<option value="' +
-        a.id +
-        '"' +
-        sel +
-        ">" +
-        esc(a.nama) +
-        " (" +
-        a.tanggal +
-        ")</option>";
+        '<option value="' + a.id + '"' + sel + ">" + esc(a.nama) + "</option>";
     });
     h += '</select><div id="n-content"></div>';
   }
@@ -628,7 +649,7 @@ function expSemua() {
     .catch(function (e) {
       b.disabled = false;
       b.innerHTML =
-        '<i class="fas fa-file-excel mr-2"></i>Export Semua Rekap ke Excel';
+        '<i class="fas fa-file-excel mr-2"></i>Export Semua Rekap to Excel';
       toast(e.message, "error");
     });
 }

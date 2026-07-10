@@ -1,13 +1,12 @@
 var API =
-  "https://script.google.com/macros/s/AKfycbywVTer3gfIozDIQ4haWXYFVHC3V1QqDsNX9fUaFtpn_nymb8Iu8ztyXtv6RxNgFuMT/exec";
+  "https://script.google.com/macros/s/AKfycbxl-zL13Ua_D6JDKDFVHvyEqIbal313FHNrW571CfY6kL-CBKLsHOW787jOazsgg7w6/exec";
 var acts = [],
   pState = 0,
   cNim = "",
   cNama = "",
   rekapData = null,
   notPreselect = "",
-  isAdmin = false,
-  refreshTimer = null;
+  isAdmin = false;
 
 function $(id) {
   return document.getElementById(id);
@@ -57,30 +56,6 @@ function toast(msg, type) {
   setTimeout(function () {
     t.remove();
   }, 3500);
-}
-
-function timeLeft(ts) {
-  if (!ts) return "";
-  var d = ts - Date.now();
-  if (d <= 0) return "Selesai";
-  var m = Math.floor(d / 60000),
-    h = Math.floor(m / 60);
-  m = m % 60;
-  return h > 0 ? h + " jam " + m + " menit lagi" : m + " menit lagi";
-}
-
-function startRefresh() {
-  stopRefresh();
-  refreshTimer = setInterval(function () {
-    if (!$("t-aktivitas").classList.contains("hidden")) renderAktivitas();
-    else if (!$("t-presensi").classList.contains("hidden")) renderPresensi();
-  }, 30000);
-}
-function stopRefresh() {
-  if (refreshTimer) {
-    clearInterval(refreshTimer);
-    refreshTimer = null;
-  }
 }
 
 // ==================== AUTH & NAV ====================
@@ -157,7 +132,6 @@ function loginAsUser() {
   sessionStorage.setItem("role", "user");
   hideLoader();
   buildNav();
-  startRefresh();
   go("presensi");
 }
 
@@ -171,7 +145,6 @@ function submitLogin() {
         sessionStorage.setItem("role", "admin");
         hideLoader();
         buildNav();
-        startRefresh();
         go("aktivitas");
       } else {
         var e = $("login-err");
@@ -197,36 +170,27 @@ function renderAktivitas() {
         '<div class="bg-white rounded-2xl p-8 text-center text-slate-400 text-sm"><i class="fas fa-inbox text-3xl mb-2 block"></i>Belum ada aktivitas</div>';
     } else {
       list.sort(function (a, b) {
-        return (b.tsMulai || 0) - (a.tsMulai || 0);
+        return new Date(b.waktuDibuat) - new Date(a.waktuDibuat);
       });
       list.forEach(function (a) {
         var badge,
-          act = "",
-          countdown = "";
+          act = "";
         if (a.status === "Belum Mulai") {
           badge =
             '<span class="text-[10px] px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 font-bold">Belum Mulai</span>';
           act =
-            "<button onclick=\"hapusAkt('" +
+            "<button onclick=\"chgStatus('" +
+            a.id +
+            "','Berlangsung')\" class=\"text-[11px] font-bold text-teal-700 hover:underline\">Mulai</button> <button onclick=\"hapusAkt('" +
             a.id +
             '\')" class="text-[11px] font-bold text-rose-500 hover:underline">Hapus</button>';
-          if (a.tsMulai)
-            countdown =
-              '<p class="text-[10px] text-blue-600 font-bold mt-2 time-left" data-ts="' +
-              a.tsMulai +
-              '"><i class="fas fa-clock mr-1"></i>' +
-              timeLeft(a.tsMulai) +
-              "</p>";
         } else if (a.status === "Berlangsung") {
           badge =
             '<span class="text-[10px] px-2 py-0.5 rounded-full bg-teal-100 text-teal-700 font-bold"><i class="fas fa-circle text-[6px] mr-1 animate-pulse"></i>Berlangsung</span>';
-          if (a.tsSelesai)
-            countdown =
-              '<p class="text-[10px] text-amber-600 font-bold mt-2 time-left" data-ts="' +
-              a.tsSelesai +
-              '"><i class="fas fa-hourglass-half mr-1"></i>Ditutup ' +
-              timeLeft(a.tsSelesai) +
-              "</p>";
+          act =
+            "<button onclick=\"chgStatus('" +
+            a.id +
+            "','Selesai')\" class=\"text-[11px] font-bold text-blue-700 hover:underline\">Selesai & Kunci</button>";
         } else {
           badge =
             '<span class="text-[10px] px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 font-bold">Selesai</span>';
@@ -240,22 +204,13 @@ function renderAktivitas() {
             '\')" class="text-[11px] font-bold text-rose-500 hover:underline">Hapus</button>';
         }
         h +=
-          '<div class="bg-white rounded-2xl p-4 mb-3 border border-slate-100 shadow-sm fade-up"><div class="flex justify-between items-start mb-1"><h3 class="font-bold text-sm text-slate-800 flex-1 mr-2">' +
+          '<div class="bg-white rounded-2xl p-4 mb-3 border border-slate-100 shadow-sm fade-up"><div class="flex justify-between items-start mb-2"><h3 class="font-bold text-sm text-slate-800 flex-1 mr-2">' +
           esc(a.nama) +
           "</h3>" +
           badge +
-          '</div><p class="text-[11px] text-slate-400 mb-1"><i class="fas fa-user-pen mr-1"></i>' +
+          '</div><p class="text-[11px] text-slate-400 mb-3"><i class="fas fa-user-pen mr-1"></i>' +
           esc(a.dibuatOleh) +
-          "</p>" +
-          (a.jamMulai && a.jamSelesai
-            ? '<p class="text-[10px] text-slate-400"><i class="fas fa-clock mr-1"></i>' +
-              a.jamMulai +
-              " — " +
-              a.jamSelesai +
-              "</p>"
-            : "") +
-          countdown +
-          '<div class="flex justify-between items-center mt-2 pt-2 border-t border-slate-50"><span class="text-[10px] text-slate-400"><i class="fas fa-users mr-1"></i>' +
+          '</p><div class="flex justify-between items-center"><span class="text-[10px] text-slate-400"><i class="fas fa-users mr-1"></i>' +
           a.peserta +
           ' peserta</span><div class="flex gap-3">' +
           act +
@@ -268,7 +223,7 @@ function renderAktivitas() {
 
 function openBuat() {
   $("modal-card").innerHTML =
-    '<h3 class="font-bold text-base text-slate-800 mb-4"><i class="fas fa-plus-circle text-blue-600 mr-1.5"></i>Jadwalkan Aktivitas</h3><div class="space-y-3"><div><label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Nama Aktivitas</label><input id="m-nama" class="w-full mt-1 px-3 py-2.5 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none" placeholder="Mis: Sosialisasi Program"></div><div><label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Tanggal</label><input id="m-tgl" type="date" class="w-full mt-1 px-3 py-2.5 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"></div><div><label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Lokasi</label><input id="m-lok" class="w-full mt-1 px-3 py-2.5 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none" placeholder="Mis: Balai Desa"></div><div class="grid grid-cols-2 gap-2"><div><label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Jam Mulai</label><input id="m-jm" type="time" class="w-full mt-1 px-3 py-2.5 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"></div><div><label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Jam Selesai</label><input id="m-js" type="time" class="w-full mt-1 px-3 py-2.5 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"></div></div><div><label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Dibuat Oleh</label><input id="m-oleh" class="w-full mt-1 px-3 py-2.5 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none" placeholder="Nama Anda"></div></div><div class="flex gap-2 mt-5"><button onclick="closeModal()" class="flex-1 py-2.5 rounded-xl border border-slate-200 text-slate-600 font-bold text-sm hover:bg-slate-50 transition">Batal</button><button onclick="submitBuat()" class="flex-1 py-2.5 rounded-xl bg-blue-700 text-white font-bold text-sm hover:bg-blue-800 transition active:scale-[.98]">Jadwalkan</button></div>';
+    '<h3 class="font-bold text-base text-slate-800 mb-4"><i class="fas fa-plus-circle text-blue-600 mr-1.5"></i>Buat Aktivitas Baru</h3><div class="space-y-3"><div><label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Nama Aktivitas</label><input id="m-nama" class="w-full mt-1 px-3 py-2.5 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none" placeholder="Mis: Sosialisasi Program"></div><div><label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Tanggal</label><input id="m-tgl" type="date" class="w-full mt-1 px-3 py-2.5 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"></div><div><label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Lokasi</label><input id="m-lok" class="w-full mt-1 px-3 py-2.5 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none" placeholder="Mis: Balai Desa"></div><div class="grid grid-cols-2 gap-2"><div><label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Jam Mulai</label><input id="m-jm" type="time" class="w-full mt-1 px-3 py-2.5 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"></div><div><label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Jam Selesai</label><input id="m-js" type="time" class="w-full mt-1 px-3 py-2.5 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"></div></div><div><label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Dibuat Oleh</label><input id="m-oleh" class="w-full mt-1 px-3 py-2.5 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none" placeholder="Nama Anda"></div></div><div class="flex gap-2 mt-5"><button onclick="closeModal()" class="flex-1 py-2.5 rounded-xl border border-slate-200 text-slate-600 font-bold text-sm hover:bg-slate-50 transition">Batal</button><button onclick="submitBuat()" class="flex-1 py-2.5 rounded-xl bg-blue-700 text-white font-bold text-sm hover:bg-blue-800 transition active:scale-[.98]">Buat</button></div>';
   $("modal-bg").classList.remove("hidden");
 }
 
@@ -293,7 +248,7 @@ function submitBuat() {
     .then(function (r) {
       if (r.error) return toast(r.error, "error");
       closeModal();
-      toast("Aktivitas berhasil dijadwalkan", "success");
+      toast("Aktivitas berhasil dibuat", "success");
       renderAktivitas();
     })
     .catch(function (e) {
@@ -346,12 +301,31 @@ function submitEdit(id) {
     });
 }
 
+function chgStatus(id, status) {
+  var lb = status === "Berlangsung" ? "mulai" : "selesaikan & kunci";
+  if (!confirm("Yakin ingin " + lb + " aktivitas ini?")) return;
+  api("ubahStatus", { id: id, status: status })
+    .then(function (r) {
+      if (r.error) return toast(r.error, "error");
+      toast("Status berhasil diubah", "success");
+      renderAktivitas();
+    })
+    .catch(function (e) {
+      toast(e.message, "error");
+    });
+}
+
 function hapusAkt(id) {
-  if (!confirm("Hapus aktivitas ini?")) return;
+  if (
+    !confirm(
+      "Hapus aktivitas ini? Semua data presensi dan notulensi juga akan dihapus.",
+    )
+  )
+    return;
   api("hapusAktivitas", { id: id })
     .then(function (r) {
       if (r.error) return toast(r.error, "error");
-      toast("Berhasil dihapus", "success");
+      toast("Aktivitas berhasil dihapus", "success");
       renderAktivitas();
     })
     .catch(function (e) {
@@ -390,12 +364,12 @@ function renderPresensi() {
         return x.id === $("p-akt").value;
       });
       var el = $("p-time");
-      if (a && a.tsSelesai)
+      if (a && a.jamMulai && a.jamSelesai)
         el.innerHTML =
-          '<div class="bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 text-[11px] text-amber-700 text-center"><i class="fas fa-hourglass-half mr-1"></i>Ditutup <strong class="time-left" data-ts="' +
-          a.tsSelesai +
-          '">' +
-          timeLeft(a.tsSelesai) +
+          '<div class="bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-[11px] text-slate-500 text-center"><i class="fas fa-clock mr-1"></i>Presensi dibuka: <strong class="text-slate-700">' +
+          a.jamMulai +
+          '</strong> sampai <strong class="text-slate-700">' +
+          a.jamSelesai +
           "</strong></div>";
       else el.innerHTML = "";
       loadPeserta(a ? a.id : "");
@@ -611,8 +585,9 @@ function renderRekap() {
             pct +
             "%</p></div></div>";
         });
+      h += "</div>";
       h +=
-        '</div><h3 class="text-sm font-bold text-slate-700 mb-2"><i class="fas fa-users text-blue-600 mr-1.5"></i>Rekap Per Anggota</h3><div class="bg-white rounded-2xl border border-slate-100 shadow-sm mb-5 overflow-hidden">';
+        '<h3 class="text-sm font-bold text-slate-700 mb-2"><i class="fas fa-users text-blue-600 mr-1.5"></i>Rekap Per Anggota</h3><div class="bg-white rounded-2xl border border-slate-100 shadow-sm mb-5 overflow-hidden">';
       if (!d.anggota.length)
         h +=
           '<p class="text-xs text-slate-400 text-center py-4">Belum ada data</p>';
@@ -634,7 +609,7 @@ function renderRekap() {
             pct +
             '%</p></div><button onclick="expAnggota(' +
             i +
-            ')" class="text-[10px] px-2.5 py-1.5 bg-emerald-50 text-emerald-700 rounded-lg font-bold hover:bg-emerald-100 transition"><i class="fas fa-download"></i></button></div></div>';
+            ')" class="text-[10px] px-2.5 py-1.5 bg-emerald-50 text-emerald-700 rounded-lg font-bold hover:bg-emerald-100 transition" title="Download Excel"><i class="fas fa-download"></i></button></div></div>';
         });
       h +=
         '</div><button onclick="expSemua()" id="btn-exp" class="w-full bg-blue-700 hover:bg-blue-800 text-white font-bold py-3 rounded-xl text-sm shadow-lg shadow-blue-200 transition active:scale-[.98]"><i class="fas fa-file-excel mr-2"></i>Export Semua Rekap ke Excel</button>';
@@ -674,7 +649,7 @@ function expSemua() {
     .catch(function (e) {
       b.disabled = false;
       b.innerHTML =
-        '<i class="fas fa-file-excel mr-2"></i>Export Semua Rekap ke Excel';
+        '<i class="fas fa-file-excel mr-2"></i>Export Semua Rekap to Excel';
       toast(e.message, "error");
     });
 }
@@ -730,13 +705,9 @@ window.onload = function () {
       ":" +
       String(n.getMinutes()).padStart(2, "0") +
       ":" +
-      String(n.getSeconds()).padStart(2, "0");
-    document.querySelectorAll(".time-left").forEach(function (el) {
-      var ts = parseInt(el.dataset.ts);
-      if (ts) el.textContent = timeLeft(ts);
-    });
+      String(n.getSeconds()).padStart(2, "0") +
+      " WIB";
   }, 1000);
-
   var savedRole = sessionStorage.getItem("role");
   if (savedRole) {
     isAdmin = savedRole === "admin";
@@ -744,7 +715,6 @@ window.onload = function () {
       acts = list;
       hideLoader();
       buildNav();
-      startRefresh();
       go(isAdmin ? "aktivitas" : "presensi");
     });
     return;

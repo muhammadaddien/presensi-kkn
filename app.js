@@ -127,7 +127,6 @@ function toggleAdminForm(show) {
   $("admin-form").classList.toggle("hidden", !show);
   if (show) $("admin-pw").focus();
 }
-
 function loginAsUser() {
   isAdmin = false;
   sessionStorage.setItem("role", "user");
@@ -175,7 +174,15 @@ function renderAktivitas() {
       });
       list.forEach(function (a) {
         var badge,
-          act = "";
+          act = "",
+          timeLabel = "";
+        if (a.jamMulai && a.jamSelesai)
+          timeLabel =
+            '<span class="text-[11px] text-slate-400"><i class="fas fa-clock mr-1"></i>' +
+            a.jamMulai +
+            " — " +
+            a.jamSelesai +
+            " WIB</span>";
         if (a.status === "Belum Mulai") {
           badge =
             '<span class="text-[10px] px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 font-bold">Belum Mulai</span>';
@@ -198,18 +205,22 @@ function renderAktivitas() {
           act =
             "<button onclick=\"goNotulensi('" +
             a.id +
-            '\')" class="text-[11px] font-bold text-slate-600 hover:underline">Lihat Notulensi</button>';
+            '\')" class="text-[11px] font-bold text-slate-600 hover:underline">Notulensi</button>';
         }
         h +=
           '<div class="bg-white rounded-2xl p-4 mb-3 border border-slate-100 shadow-sm fade-up"><div class="flex justify-between items-start mb-2"><h3 class="font-bold text-sm text-slate-800 flex-1 mr-2">' +
           esc(a.nama) +
           "</h3>" +
           badge +
-          '</div><div class="text-[11px] text-slate-400 space-x-3 mb-3"><span><i class="fas fa-calendar mr-1"></i>' +
+          '</div><div class="text-[11px] text-slate-400 space-x-3 mb-1"><span><i class="fas fa-calendar mr-1"></i>' +
           a.tanggal +
           '</span><span><i class="fas fa-location-dot mr-1"></i>' +
           esc(a.lokasi) +
-          '</span></div><div class="flex justify-between items-center"><span class="text-[10px] text-slate-400"><i class="fas fa-users mr-1"></i>' +
+          "</span></div>" +
+          (timeLabel
+            ? '<div class="mb-3">' + timeLabel + "</div>"
+            : '<div class="mb-3"></div>') +
+          '<div class="flex justify-between items-center"><span class="text-[10px] text-slate-400"><i class="fas fa-users mr-1"></i>' +
           a.peserta +
           ' peserta</span><div class="flex gap-3">' +
           act +
@@ -222,7 +233,7 @@ function renderAktivitas() {
 
 function openBuat() {
   $("modal-card").innerHTML =
-    '<h3 class="font-bold text-base text-slate-800 mb-4"><i class="fas fa-plus-circle text-blue-600 mr-1.5"></i>Buat Aktivitas Baru</h3><div class="space-y-3"><div><label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Nama Aktivitas</label><input id="m-nama" class="w-full mt-1 px-3 py-2.5 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none" placeholder="Mis: Sosialisasi Program"></div><div><label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Tanggal</label><input id="m-tgl" type="date" class="w-full mt-1 px-3 py-2.5 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"></div><div><label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Lokasi</label><input id="m-lok" class="w-full mt-1 px-3 py-2.5 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none" placeholder="Mis: Balai Desa"></div><div><label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Dibuat Oleh</label><input id="m-oleh" class="w-full mt-1 px-3 py-2.5 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none" placeholder="Nama Anda"></div></div><div class="flex gap-2 mt-5"><button onclick="closeModal()" class="flex-1 py-2.5 rounded-xl border border-slate-200 text-slate-600 font-bold text-sm hover:bg-slate-50 transition">Batal</button><button onclick="submitBuat()" class="flex-1 py-2.5 rounded-xl bg-blue-700 text-white font-bold text-sm hover:bg-blue-800 transition active:scale-[.98]">Buat</button></div>';
+    '<h3 class="font-bold text-base text-slate-800 mb-4"><i class="fas fa-plus-circle text-blue-600 mr-1.5"></i>Buat Aktivitas Baru</h3><div class="space-y-3"><div><label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Nama Aktivitas</label><input id="m-nama" class="w-full mt-1 px-3 py-2.5 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none" placeholder="Mis: Sosialisasi Program"></div><div><label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Tanggal</label><input id="m-tgl" type="date" class="w-full mt-1 px-3 py-2.5 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"></div><div><label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Lokasi</label><input id="m-lok" class="w-full mt-1 px-3 py-2.5 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none" placeholder="Mis: Balai Desa"></div><div class="grid grid-cols-2 gap-2"><div><label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Jam Mulai</label><input id="m-jm" type="time" class="w-full mt-1 px-3 py-2.5 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"></div><div><label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Jam Selesai</label><input id="m-js" type="time" class="w-full mt-1 px-3 py-2.5 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"></div></div><div><label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Dibuat Oleh</label><input id="m-oleh" class="w-full mt-1 px-3 py-2.5 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none" placeholder="Nama Anda"></div></div><div class="flex gap-2 mt-5"><button onclick="closeModal()" class="flex-1 py-2.5 rounded-xl border border-slate-200 text-slate-600 font-bold text-sm hover:bg-slate-50 transition">Batal</button><button onclick="submitBuat()" class="flex-1 py-2.5 rounded-xl bg-blue-700 text-white font-bold text-sm hover:bg-blue-800 transition active:scale-[.98]">Buat</button></div>';
   $("modal-bg").classList.remove("hidden");
 }
 
@@ -230,9 +241,20 @@ function submitBuat() {
   var n = $("m-nama").value.trim(),
     t = $("m-tgl").value,
     l = $("m-lok").value.trim(),
+    jm = $("m-jm").value,
+    js = $("m-js").value,
     o = $("m-oleh").value.trim();
-  if (!n || !t || !l || !o) return toast("Lengkapi semua field", "error");
-  api("buatAktivitas", { nama: n, tanggal: t, lokasi: l, dibuatOleh: o })
+  if (!n || !t || !l || !jm || !js || !o)
+    return toast("Lengkapi semua field", "error");
+  if (jm >= js) return toast("Jam selesai harus setelah jam mulai", "error");
+  api("buatAktivitas", {
+    nama: n,
+    tanggal: t,
+    lokasi: l,
+    jamMulai: jm,
+    jamSelesai: js,
+    dibuatOleh: o,
+  })
     .then(function (r) {
       if (r.error) return toast(r.error, "error");
       closeModal();
@@ -291,7 +313,7 @@ function renderPresensi() {
       '<div class="text-center text-slate-400 text-sm py-6"><i class="fas fa-pause-circle text-2xl mb-2 block"></i>Tidak ada aktivitas yang sedang berlangsung</div>';
   } else {
     h +=
-      '<label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Pilih Aktivitas</label><select id="p-akt" onchange="loadPeserta(this.value)" class="w-full mt-1 mb-4 px-3 py-2.5 border border-slate-200 rounded-lg text-sm appearance-none bg-slate-50 focus:ring-2 focus:ring-blue-500 focus:outline-none"><option value=""> Pilih </option>';
+      '<label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Pilih Aktivitas</label><select id="p-akt" onchange="loadPeserta(this.value)" class="w-full mt-1 mb-2 px-3 py-2.5 border border-slate-200 rounded-lg text-sm appearance-none bg-slate-50 focus:ring-2 focus:ring-blue-500 focus:outline-none"><option value=""> Pilih </option>';
     bl.forEach(function (a) {
       h +=
         '<option value="' +
@@ -303,11 +325,26 @@ function renderPresensi() {
         ")</option>";
     });
     h +=
-      '</select><div id="p-form"></div><div id="p-peserta" class="mt-4"></div>';
+      '</select><div id="p-time" class="mb-4"></div><div id="p-form"></div><div id="p-peserta" class="mt-4"></div>';
   }
   h += "</div>";
   $("t-presensi").innerHTML = h;
   showPForm();
+  $("p-akt").onchange = function () {
+    var a = acts.find(function (x) {
+      return x.id === $("p-akt").value;
+    });
+    var el = $("p-time");
+    if (a && a.jamMulai && a.jamSelesai)
+      el.innerHTML =
+        '<div class="bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-[11px] text-slate-500 text-center"><i class="fas fa-clock mr-1"></i>Presensi dibuka: <strong class="text-slate-700">' +
+        a.jamMulai +
+        '</strong> sampai <strong class="text-slate-700">' +
+        a.jamSelesai +
+        "</strong> WIB</div>";
+    else el.innerHTML = "";
+    loadPeserta(a ? a.id : "");
+  };
 }
 
 function showPForm() {
@@ -528,7 +565,6 @@ function renderRekap() {
             "%</p></div></div>";
         });
       h += "</div>";
-
       h +=
         '<h3 class="text-sm font-bold text-slate-700 mb-2"><i class="fas fa-users text-blue-600 mr-1.5"></i>Rekap Per Anggota</h3><div class="bg-white rounded-2xl border border-slate-100 shadow-sm mb-5 overflow-hidden">';
       if (!d.anggota.length)
@@ -554,10 +590,8 @@ function renderRekap() {
             i +
             ')" class="text-[10px] px-2.5 py-1.5 bg-emerald-50 text-emerald-700 rounded-lg font-bold hover:bg-emerald-100 transition" title="Download Excel"><i class="fas fa-download"></i></button></div></div>';
         });
-      h += "</div>";
-
       h +=
-        '<button onclick="expSemua()" id="btn-exp" class="w-full bg-blue-700 hover:bg-blue-800 text-white font-bold py-3 rounded-xl text-sm shadow-lg shadow-blue-200 transition active:scale-[.98]"><i class="fas fa-file-excel mr-2"></i>Export Semua Rekap ke Excel</button>';
+        '</div><button onclick="expSemua()" id="btn-exp" class="w-full bg-blue-700 hover:bg-blue-800 text-white font-bold py-3 rounded-xl text-sm shadow-lg shadow-blue-200 transition active:scale-[.98]"><i class="fas fa-file-excel mr-2"></i>Export Semua Rekap ke Excel</button>';
       el.innerHTML = h;
     })
     .catch(function (e) {
@@ -653,7 +687,6 @@ window.onload = function () {
       String(n.getSeconds()).padStart(2, "0") +
       " WIB";
   }, 1000);
-
   var savedRole = sessionStorage.getItem("role");
   if (savedRole) {
     isAdmin = savedRole === "admin";
@@ -665,7 +698,6 @@ window.onload = function () {
     });
     return;
   }
-
   api("listAktivitas")
     .then(function (list) {
       acts = list;

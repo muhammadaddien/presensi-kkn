@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Presensi Aktivitas KKN</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
+    />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body class="bg-slate-50 min-h-screen font-sans text-slate-800">
+    <div
+      id="toast-box"
+      class="fixed top-4 left-1/2 -translate-x-1/2 z-50"
+    ></div>
+
+    <div
+      id="modal-bg"
+      class="hidden fixed inset-0 bg-black/40 z-40 flex items-center justify-center p-4"
+      onclick="closeModal()"
+    >
+      <div
+        id="modal-card"
+        class="bg-white rounded-2xl shadow-xl w-full max-w-sm p-6"
+        onclick="event.stopPropagation()"
+      ></div>
+    </div>
+
+    <div
+      id="loader"
+      class="fixed inset-0 bg-slate-50 z-50 flex flex-col items-center justify-center"
+    >
+      <div
+        class="w-10 h-10 border-4 border-slate-200 border-t-blue-600 rounded-full spin mb-3"
+      ></div>
+      <p class="text-sm text-slate-400">Menghubungkan...</p>
+    </div>
+
+    <header
+      class="bg-gradient-to-br from-blue-800 via-blue-900 to-slate-900 text-white p-5 pb-7 rounded-b-3xl text-center"
+    >
+      <h1 class="text-xl font-extrabold tracking-wide">
+        Presensi Aktivitas KKN
+      </h1>
+      <p class="text-xs text-blue-200 mt-1.5" id="hd-date"></p>
+      <p
+        class="text-sm font-bold mt-0.5 tabular-nums text-blue-100"
+        id="hd-clock"
+      ></p>
+    </header>
+
+    <nav class="flex justify-center -mt-4 px-4 relative z-20">
+      <div
+        class="bg-white/80 backdrop-blur-md p-1 rounded-2xl flex w-full max-w-lg shadow-lg border border-slate-200/60 text-[11px] font-bold"
+      >
+        <button
+          onclick="go('aktivitas')"
+          id="nav-aktivitas"
+          class="flex-1 py-2 rounded-xl bg-blue-700 text-white shadow"
+        >
+          <i class="fas fa-clipboard-list mr-1"></i>Aktivitas
+        </button>
+        <button
+          onclick="go('presensi')"
+          id="nav-presensi"
+          class="flex-1 py-2 rounded-xl text-slate-400"
+        >
+          <i class="fas fa-fingerprint mr-1"></i>Presensi
+        </button>
+        <button
+          onclick="go('notulensi')"
+          id="nav-notulensi"
+          class="flex-1 py-2 rounded-xl text-slate-400"
+        >
+          <i class="fas fa-file-lines mr-1"></i>Notulensi
+        </button>
+        <button
+          onclick="go('rekap')"
+          id="nav-rekap"
+          class="flex-1 py-2 rounded-xl text-slate-400"
+        >
+          <i class="fas fa-chart-column mr-1"></i>Rekap
+        </button>
+      </div>
+    </nav>
+
+    <main class="max-w-md mx-auto px-4 mt-4 pb-12">
+      <div id="t-aktivitas"></div>
+      <div id="t-presensi" class="hidden"></div>
+      <div id="t-notulensi" class="hidden"></div>
+      <div id="t-rekap" class="hidden"></div>
+    </main>
+
+    <script src="app.js"></script>
+  </body>
+</html>

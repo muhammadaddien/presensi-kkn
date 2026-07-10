@@ -341,7 +341,7 @@ function renderPresensi() {
         a.jamMulai +
         '</strong> sampai <strong class="text-slate-700">' +
         a.jamSelesai +
-        "</strong> WIB</div>";
+        "</strong></div>";
     else el.innerHTML = "";
     loadPeserta(a ? a.id : "");
   };

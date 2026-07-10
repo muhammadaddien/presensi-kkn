@@ -1,5 +1,5 @@
 var API =
-  "https://script.google.com/macros/s/AKfycbw4skCqXy15JipfoiKSCkEoeeJbLDa6Q7IwdlCYO_6uepiHIoxgV5D74cSOcuH31j5-/exec";
+  "https://script.google.com/macros/s/AKfycbywVTer3gfIozDIQ4haWXYFVHC3V1QqDsNX9fUaFtpn_nymb8Iu8ztyXtv6RxNgFuMT/exec";
 var acts = [],
   pState = 0,
   cNim = "",
